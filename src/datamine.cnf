@@ -1,0 +1,5 @@
+[datamine]
+user=user
+password=password
+host=localhost
+dbname=datamine
