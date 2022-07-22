@@ -7,7 +7,19 @@
 
 writeToJson<- function(file_name, file_path_json, data, type)
 {
-  current_data <- if(type == "idlist")  data$osti_id else data
+  
+  current_data <- NULL
+  
+  if(type == "idlist")
+  {
+    current_data<- data.frame(data$osti_id)
+    colnames(current_data)<-"osti_id"
+  }
+  else
+  {
+    current_data<- data
+  }
+  
   fullPath<- paste0(file_path_json,file_name)
   if(file.exists( fullPath))
   {
@@ -17,7 +29,7 @@ writeToJson<- function(file_name, file_path_json, data, type)
     if(type == "idlist")
     {
       #setdiff(x,y) : present in x but not in y
-      new_data <- setdiff(current_data,existing_data$osti_id) 
+      new_data <- setdiff(current_data,existing_data) 
       new_data<- data.frame(new_data)
       colnames(new_data)<-"osti_id"
     }
@@ -31,10 +43,13 @@ writeToJson<- function(file_name, file_path_json, data, type)
     #bind_rows works with unequal columns
     final_data<-bind_rows(existing_data,new_data)
     write( jsonlite::toJSON(final_data), fullPath)
+    cat(paste0("Write to json file completed successfully for file ",file_name))
   }
   else
   {
     write(jsonlite::toJSON(current_data), fullPath)
+    cat(paste0("Write to json file completed successfully for file ",file_name))
+    
   }
 }
 
@@ -100,7 +115,8 @@ writeToDb <- function(connection, data)
                         coverage VARCHAR(200) NULL,           
                         org_research TEXT CHARACTER SET utf8 NULL,
                         PRIMARY KEY (id));")
-
+    cat("Datatable not present in current database. Automatically created datatable")
+    
     api_record_table<-data
   }
   
@@ -109,7 +125,7 @@ writeToDb <- function(connection, data)
   change_columns <- c("authors","subjects","sponsor_orgs","research_orgs","other_identifiers","org_research","links","author_details")
   change_columns<- intersect(change_columns,names(api_record_table))
   api_record_table[,(change_columns) := lapply(.SD, as.character),.SDcols=change_columns]
-
+  
   #transform date
   final_date<-sapply(api_record_table$publication_date, function(x)gsub('T', ' ', x))
   final_date<-sapply(api_record_table$publication_date, function(x)gsub('Z', '', x))
@@ -119,11 +135,13 @@ writeToDb <- function(connection, data)
   final_date2<-sapply(api_record_table$entry_date, function(x)gsub('Z', '', x))
   api_record_table$entry_date<-final_date2
   
-
+  
   #write to records table
   dbWriteTable(connection, "Records", api_record_table,overwrite=FALSE,append=TRUE)
+  cat(paste0("Write to database completed successfully for table ","records"))
   dbDisconnect(connection)
 }
+
 
 writeToElastic <- function(connection,data,indexName,field)
 {
@@ -164,4 +182,12 @@ writeToElastic <- function(connection,data,indexName,field)
   
   #write to index
   docs_bulk(connection,new_data, index = indexName)
+  cat(paste0("Write to elasticsearch completed successfully for index ",indexName))
+  
 }
+
+
+
+
+
+
