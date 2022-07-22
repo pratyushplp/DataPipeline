@@ -26,7 +26,7 @@ source("src/config.R")
 #taking search query input from command line
 search_text <- commandArgs(trailingOnly = TRUE)
 base_url<- "https://www.osti.gov/api/v1/records"
-search_query <- paste0("?q=",search_text,"&rows=100") #"?q="+search_text+"&rows=1000"
+search_query <- paste0("?q=",search_text,"&rows=1000") #"?q="+search_text+"&rows=1000"
 full_url<- paste0(base_url,search_query)
 
 #fetch api data

@@ -80,7 +80,7 @@ writeToDb <- function(connection, data)
   else
   {
     cat("Datatable not present, creating table")
-    #script to create datatable
+    #script to create datatable if table does not exists
     dbGetQuery(connection,"CREATE TABLE datamine.records (
                         id INT NOT NULL AUTO_INCREMENT,
                         osti_id VARCHAR(20) NULL,             
@@ -120,10 +120,23 @@ writeToDb <- function(connection, data)
     api_record_table<-data
   }
   
+  #add extra columns if needed as per data
+  column_names<-names(api_record_table)
+  column_existing<- dbGetQuery(connection,"DESCRIBE Records")
+  column_names_existing<-column_existing$Field
+  new_columns<- setdiff(column_names,column_names_existing)
+  for(col in new_columns)
+  {
+    query<- paste0("ALTER TABLE records ADD ",col," TEXT CHARACTER SET utf8 NULL")
+    dbGetQuery(connection,query)
+  }
+  
+  
+  
   #Transform
   #update column type from list to char for specific columns so they can be stored in DB
   change_columns <- c("authors","subjects","sponsor_orgs","research_orgs","other_identifiers","org_research","links","author_details")
-  change_columns<- intersect(change_columns,names(api_record_table))
+  change_columns<- intersect(change_columns,column_names)
   api_record_table[,(change_columns) := lapply(.SD, as.character),.SDcols=change_columns]
   
   #transform date
