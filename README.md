@@ -1,3 +1,6 @@
+# Main program functionality
+The R program mines data from an api end point and stores the data in json file, mysql database and elasticsearch
+
 Prerequisities:
 1. Install docker and docker-compose.
 
@@ -16,13 +19,12 @@ Docker compose (Used for hosting MySQL and Elastic Server)
 File JSON is stored in:
 `src/file` folder path.
 
-R# Scripts
-
+#R 
 AssignmentR.R is the main R script which contains all the ETL operation for the datapipeline
 UtilFunctions.R is a seperate R files which has all the functions required for AssignmentR.R
 
 #Connections
-Datebase is connected using a cnf file
+All connection variables are assigned in config.R file.
 Elasticsearch has been implemented locally, with SSH disabled
 
 #packages used
@@ -32,3 +34,5 @@ dplyr
 RMariaDB
 data.tabl
 elastic
+
+
