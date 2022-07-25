@@ -43,24 +43,17 @@ writeToJson<- function(file_name, file_path_json, data, type)
     #bind_rows works with unequal columns
     final_data<-bind_rows(existing_data,new_data)
     write( jsonlite::toJSON(final_data), fullPath)
-    cat(paste0("Write to json file completed successfully for file ",file_name))
+    print(paste0("Write to json file completed successfully for file ",file_name))
   }
   else
   {
     write(jsonlite::toJSON(current_data), fullPath)
-    cat(paste0("Write to json file completed successfully for file ",file_name))
+    print(paste0("Write to json file completed successfully for file ",file_name))
     
   }
 }
 
-connectToDB <- function(rmariadb.settingsfile,rmariadb.db)
-{
-  connDataminedb<-dbConnect(RMariaDB::MariaDB(),default.file=rmariadb.settingsfile,group=rmariadb.db)
-  return(connDataminedb)
-}
-
 #TODO ; remove character(0)
-#2) find solution for column Link and author details
 writeToDb <- function(connection, data)
 {
   api_record_table<-NULL
@@ -79,7 +72,7 @@ writeToDb <- function(connection, data)
   }
   else
   {
-    cat("Datatable not present, creating table")
+    print("Datatable not present, creating table")
     #script to create datatable if table does not exists
     dbGetQuery(connection,"CREATE TABLE datamine.records (
                         id INT NOT NULL AUTO_INCREMENT,
@@ -93,29 +86,29 @@ writeToDb <- function(connection, data)
                         publication_date   DATETIME NULL, 
                         entry_date       DATETIME NULL,   
                         format         VARCHAR(500) NULL,     
-                        authors        TEXT CHARACTER SET utf8 NULL,     
-                        article_type     VARCHAR(200) NULL,   
-                        doe_contract_number VARCHAR(200) NULL,
-                        subjects     TEXT CHARACTER SET utf8 NULL,      
+                        authors        LONGTEXT CHARACTER SET utf8 NULL,     
+                        article_type     TEXT NULL,   
+                        doe_contract_number TEXT NULL,
+                        subjects     LONGTEXT CHARACTER SET utf8 NULL,      
                         sponsor_orgs   TEXT CHARACTER SET utf8 NULL,    
                         research_orgs  TEXT CHARACTER SET utf8 NULL,     
                         other_identifiers    TEXT CHARACTER SET utf8 NULL,              
                         publisher    TEXT CHARACTER SET utf8 NULL,       
-                        journal_name  VARCHAR(200) NULL,      
+                        journal_name  TEXT NULL,      
                         journal_issue  VARCHAR(200) NULL,     
                         journal_volume VARCHAR(200) NULL,      
                         journal_issn  VARCHAR(200) NULL,      
                         report_number  VARCHAR(200) NULL,     
                         conference_info  TEXT CHARACTER SET utf8 NULL,   
-                        contributing_org  VARCHAR(500) NULL,  
+                        contributing_org  TEXT CHARACTER SET utf8 NULL,  
                         availability TEXT CHARACTER SET utf8 NULL,       
-                        type_qualifier  VARCHAR(100) NULL, 
-                        author_details  TEXT CHARACTER SET utf8 NULL, 
+                        type_qualifier  TEXT NULL, 
+                        author_details  LONGTEXT CHARACTER SET utf8 NULL, 
                         links  TEXT CHARACTER SET utf8 NULL, 
-                        coverage VARCHAR(200) NULL,           
-                        org_research TEXT CHARACTER SET utf8 NULL,
+                        coverage TEXT NULL,           
+                        org_research LONGTEXT CHARACTER SET utf8 NULL,
                         PRIMARY KEY (id));")
-    cat("Datatable not present in current database. Automatically created datatable")
+    print("Datatable not present in current database. Automatically created datatable")
     
     api_record_table<-data
   }
@@ -138,7 +131,7 @@ writeToDb <- function(connection, data)
   change_columns <- c("authors","subjects","sponsor_orgs","research_orgs","other_identifiers","org_research","links","author_details")
   change_columns<- intersect(change_columns,column_names)
   api_record_table[,(change_columns) := lapply(.SD, as.character),.SDcols=change_columns]
-  
+
   #transform date
   final_date<-sapply(api_record_table$publication_date, function(x)gsub('T', ' ', x))
   final_date<-sapply(api_record_table$publication_date, function(x)gsub('Z', '', x))
@@ -151,7 +144,7 @@ writeToDb <- function(connection, data)
   
   #write to records table
   dbWriteTable(connection, "Records", api_record_table,overwrite=FALSE,append=TRUE)
-  cat(paste0("Write to database completed successfully for table ","records"))
+  print(paste0("Write to database completed successfully for table ","records"))
   dbDisconnect(connection)
 }
 
@@ -189,13 +182,13 @@ writeToElastic <- function(connection,data,indexName,field)
     new_id<- setdiff(current_data$osti_id,existing_data$osti_id)
     new_data<- dplyr::filter(current_data, osti_id %in% new_id)
   }
-  
+
   # clear scroll
   scroll_clear(connection, res$`_scroll_id`)
-  
+
   #write to index
   docs_bulk(connection,new_data, index = indexName)
-  cat(paste0("Write to elasticsearch completed successfully for index ",indexName))
+  print(paste0("Write to elasticsearch completed successfully for index ",indexName))
   
 }
 

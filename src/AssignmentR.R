@@ -30,7 +30,7 @@ search_query <- paste0("?q=",search_text,"&rows=1000") #"?q="+search_text+"&rows
 full_url<- paste0(base_url,search_query)
 
 #fetch api data
-temp_api_data <- httr::GET(full_url)
+temp_api_data <- httr::GET(full_url, timeout(300))
 
 #end program if data not fetched correctly
 if(temp_api_data$status_code != "200"){
@@ -50,8 +50,8 @@ writeToJson(file_name_idlist,file_path_json, api_data,"idlist" )
 writeToJson(file_name_records,file_path_json, api_data,"records" )
 
 ##MYSQL DATABASE
-#connect to database using a setting file
-connDataminedb <- dbConnect(RMariaDB::MariaDB(), user= db_user , password=db_password, dbname=db_name, host=db_host)
+#connect to database
+connDataminedb<-dbConnect(RMariaDB::MariaDB(), user= db_user , password=db_password, dbname=db_name, host=db_host)
 
 #api_final_record <- api_data[, -which(names(api_data) %in% c("author_details","links"))]
 writeToDb(connDataminedb, api_data)
